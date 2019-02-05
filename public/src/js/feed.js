@@ -16,6 +16,7 @@ function openCreatePostModal() {
         console.log('User added to home screen');
       }
     });
+
     deferredPrompt = null;
   }
 }
