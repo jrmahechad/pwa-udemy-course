@@ -62,7 +62,7 @@ function createCard(data) {
   cardWrapper.className = 'shared-moment-card mdl-card mdl-shadow--2dp';
   var cardTitle = document.createElement('div');
   cardTitle.className = 'mdl-card__title';
-  cardTitle.style.backgroundImage = 'url('+data.image+')';
+  cardTitle.style.backgroundImage = 'url(' + data.image + ')';
   cardTitle.style.backgroundSize = 'cover';
   cardTitle.style.height = '180px';
   cardWrapper.appendChild(cardTitle);
@@ -84,8 +84,9 @@ function createCard(data) {
   sharedMomentsArea.appendChild(cardWrapper);
 }
 
-function updateUI(data){
-  for (var i = 0;i < data.length; i++){
+function updateUI(data) {
+  clearCards();
+  for (var i = 0; i < data.length; i++) {
     createCard(data[i]);
   }
 }
@@ -101,29 +102,18 @@ fetch(url)
     networkDataReceived = true;
     console.log('From web', data);
     var dataArray = [];
-    for (var key in data){
+    for (var key in data) {
       dataArray.push(data[key]);
     }
-    clearCards();
     updateUI(dataArray);
   });
 
-if ('caches' in window) {
-  caches.match(url)
-    .then(function(response) {
-      if (response) {
-        return response.json();
-      }
-    })
+if ('indexedDB' in window) {
+  readAllData('posts')
     .then(function(data) {
-      console.log('From cache', data);
       if (!networkDataReceived) {
-        clearCards();
-        var dataArray = [];
-        for (var key in data){
-          dataArray.push(data[key]);
-        }
-        updateUI(dataArray);
+        console.log('From cache', data);
+        updateUI(data);
       }
     });
 }
