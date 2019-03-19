@@ -1,7 +1,7 @@
 importScripts("/src/js/idb.js");
 importScripts("/src/js/utility.js");
 
-var CACHE_STATIC_NAME = "static-v20";
+var CACHE_STATIC_NAME = "static-v24";
 var CACHE_DYNAMIC_NAME = "dynamic-v2";
 var STATIC_FILES = [
   "/",
@@ -74,7 +74,7 @@ function isInArray(string, array) {
 }
 
 self.addEventListener("fetch", function(event) {
-  var url = "https://pwa-course-b0d4d.firebaseio.com/post";
+  var url = "https://pwa-course-b0d4d.firebaseio.com/posts";
   if (event.request.url.indexOf(url) > -1) {
     event.respondWith(
       fetch(event.request).then(function(res) {
@@ -175,3 +175,45 @@ self.addEventListener("fetch", function(event) {
 //     fetch(event.request)
 //   );
 // });
+
+self.addEventListener('sync', function(event){
+  console.log('[Service Worker] BAckground syncing', event);
+  if(event.tag === 'sync-new-posts'){
+    console.log('[Service Worker] Syncing new Posts');
+    event.waitUntil(
+      readAllData('sync-posts')
+      .then(function(data){
+        var url = "https://us-central1-pwa-course-b0d4d.cloudfunctions.net/storePostData";
+        for(var dt of data){
+          fetch(url, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Accept': 'applicatoin/json'
+            },
+            body: JSON.stringify({
+              id: dt.id,
+              title: dt.title,
+              location: dt.location,
+              image: "https://firebasestorage.googleapis.com/v0/b/pwa-course-b0d4d.appspot.com/o/sf-boat.jpg?alt=media&token=8fcef859-cac0-4d41-94e0-cea8247ee85e"
+            })
+          })
+          .then(function(res){
+            console.log('Send data', res);
+            if(res.ok){
+              res.json()
+              .then(function(resData){
+                deleteItemFromData('sync-posts', resData.id);
+
+              })
+            }
+          })
+          .catch(function(err){
+            console.log('Error whilte sending data', err);
+          })
+
+        }
+      })
+    );
+  }
+});

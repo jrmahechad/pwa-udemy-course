@@ -2,6 +2,9 @@ var shareImageButton = document.querySelector('#share-image-button');
 var createPostArea = document.querySelector('#create-post');
 var closeCreatePostModalButton = document.querySelector('#close-create-post-modal-btn');
 var sharedMomentsArea = document.querySelector('#shared-moments');
+var form = document.querySelector('form');
+var titleInput = document.querySelector('#title');
+var locationInput = document.querySelector('#location');
 
 function openCreatePostModal() {
   
@@ -95,7 +98,7 @@ function updateUI(data) {
   }
 }
 
-var url = 'https://pwa-course-b0d4d.firebaseio.com/post.json';
+var url = 'https://pwa-course-b0d4d.firebaseio.com/posts.json';
 var networkDataReceived = false;
 
 fetch(url)
@@ -121,3 +124,55 @@ if ('indexedDB' in window) {
       }
     });
 }
+
+function sendData(){
+  fetch('https://us-central1-pwa-course-b0d4d.cloudfunctions.net/storePostData', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Accept': 'applicatoin/json'
+    },
+    body: JSON.stringify({
+      id: new Date().toISOString(),
+      title: titleInput.value,
+      location: locationInput.value,
+      image: "https://firebasestorage.googleapis.com/v0/b/pwa-course-b0d4d.appspot.com/o/sf-boat.jpg?alt=media&token=8fcef859-cac0-4d41-94e0-cea8247ee85e"
+    })
+  })
+  .then(function(res){
+    console.log('Send data', res);
+    updateUI();
+  })
+}
+
+form.addEventListener('submit', function(event){
+  event.preventDefault();
+
+  if(titleInput.value.trim() === '' || locationInput.value.trim() === ''){
+    alert('Please enter valid data!')
+    return; 
+  }
+
+  closeCreatePostModal();
+
+  if('serviceWorker' in navigator && 'SyncManager' in window){
+    navigator.serviceWorker.ready
+    .then(function(sw){
+      var post = {
+        id: new Date().toISOString(),
+        title: titleInput.value,
+        location: locationInput.value
+      }
+      writeData('sync-posts', post)
+      .then(function(){
+        return sw.sync.register('sync-new-posts');
+      })
+      .then(function( ){})
+        var snackbarContainer = document.querySelector('#confirmation-toast');
+        var data = {message : 'Your post was saved for syncing!!'};
+        snackbarContainer.MaterialSnackbar.showSnackbar(data);
+    })
+  } else {
+    sendData();
+  }
+})
