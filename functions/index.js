@@ -10,7 +10,7 @@ var serviceAccount = require("./pwa-course-fb.json");
 
 admin.initializeApp({
     credential:admin.credential.cert(serviceAccount),
-    databaseURL: "https://pwa-course-b0d4d.firebaseio.com"
+    databaseURL: "DATABASEURL"
 });
 
 exports.storePostData = functions.https.onRequest((request, response) => {
