@@ -195,6 +195,8 @@ self.addEventListener('sync', function(event) {
             postData.append('title', dt.title);
             postData.append('location', dt.location);
             postData.append('file', dt.picture, dt.id + '.png');
+            postData.append('rawLocationLat', dt.rawLocation.lat);
+            postData.append('rawLocationLng', dt.rawLocation.lng);
 
             fetch('https://us-central1-pwa-course-b0d4d.cloudfunctions.net/storePostData', {
               method: 'POST',
