@@ -44,9 +44,52 @@ function displayConfirmNotification(){
     };
     navigator.serviceWorker.ready
     .then(function(swreg){
-      swreg.showNotification('Successfully subscribed!! (From SW)', options);
+      swreg.showNotification('Successfully subscribed!!', options);
     });
   }
+}
+
+function configurePushSubscription(){
+  if(!('serviceWorker' in navigator)){
+    return;
+  }
+  var reg;
+  navigator.serviceWorker.ready.then(function(swreg){
+    reg = swreg;
+    return swreg.pushManager.getSubscription();
+  })
+  .then(function(sub){
+    if(sub === null){
+      // Create new sub
+      var vapidPublicKey = 'BNjGwV6yjuCIEuP4JBm49ygndA-blnHyLL5Bhv_vpsJAGJhL-_mNEiXJGFfR1QaXGdi7QYUOZdGhOEyNDIOIKO0'
+      var convertedVapidPublicKey = urlBase64ToUint8Array(vapidPublicKey);
+      return reg.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: convertedVapidPublicKey,
+      });
+    } else {
+      // We have a sub
+    }
+  })
+  .then(function(newSub){
+    return fetch('https://pwa-course-b0d4d.firebaseio.com/subscriptions.json', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      },
+      body: JSON.stringify(newSub)
+    })
+  })
+  .then(function(res){
+    if(res.ok){
+      displayConfirmNotification();
+    }
+  })
+  .catch(function(err){
+    console.log(err);
+    
+  });
 }
 
 function askForNotificacionPermission(){
@@ -55,12 +98,13 @@ function askForNotificacionPermission(){
     if(result !== 'granted'){
       console.log('No notification permission granted!!');
     } else {
-      displayConfirmNotification()
+      //displayConfirmNotification()
+      configurePushSubscription()
     }
   });
 }
 
-if('Notification' in window){
+if('Notification' in window && 'serviceWorker' in navigator){
   for(var i  = 0 ; i < enableNotificationsButtons.length ; i++){
     enableNotificationsButtons[i].style.display = 'inline-block';
     enableNotificationsButtons[i].addEventListener('click', askForNotificacionPermission)
